@@ -9,8 +9,6 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-  <!-- SheetJS for Excel Export -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     body {
@@ -30,7 +28,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- Top Navigation Bar (No personal info required) -->
+  <!-- Top Navigation Bar (No personal info, no Excel export) -->
   <header id="app-header" class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
     <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
       <button type="button" onclick="navigateTo('major')" class="flex items-center gap-2.5 text-left">
@@ -49,14 +47,6 @@
           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition">
           <span id="sound-icon">🔊</span>
           <span id="sound-label">효과음 ON</span>
-        </button>
-
-        <!-- Excel Export Button -->
-        <button type="button" onclick="exportToExcel()"
-          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
-          <span>📥</span>
-          <span>엑셀로 내보내기</span>
-          <span id="record-count-badge" class="ml-0.5 px-1.5 py-0.5 bg-emerald-800 text-emerald-100 rounded-full text-[11px]">0</span>
         </button>
       </div>
     </div>
@@ -85,7 +75,7 @@
       <div id="major-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </section>
 
-    <!-- STEP 2: Sub Unit (소단원 / 중단원) -->
+    <!-- STEP 2: Sub Unit (소단원) -->
     <section id="view-sub" class="hidden space-y-4">
       <div class="mb-2">
         <span class="text-xs font-bold uppercase tracking-wider text-teal-600">STEP 2 · 소단원 선택</span>
@@ -154,10 +144,9 @@
               <p id="result-subtext" class="text-sm text-slate-300 mt-1"></p>
             </div>
             <div class="flex flex-wrap gap-2.5">
-              <button type="button" onclick="exportToExcel()"
-                class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold shadow transition flex items-center gap-1.5">
-                <span>📥</span>
-                <span>엑셀로 내보내기</span>
+              <button type="button" onclick="resetCurrentQuiz()"
+                class="px-4 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-sm font-bold shadow transition">
+                다시 풀기
               </button>
               <button type="button" onclick="goBack()"
                 class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition">
@@ -173,8 +162,8 @@
             <div class="flex items-center gap-2">
               <span class="text-xl">🙋‍♂️</span>
               <div>
-                <h4 class="text-base font-extrabold text-amber-950">선생님께 질문 남기기 (메모)</h4>
-                <p class="text-xs text-amber-800">이해가 잘 안 되는 문항 번호나 궁금한 점을 적어두면 엑셀 파일 내보내기 시 함께 저장됩니다.</p>
+                <h4 class="text-base font-extrabold text-amber-950">선생님께 질문 메모</h4>
+                <p class="text-xs text-amber-800">이해가 잘 안 되는 문항 번호나 궁금한 점을 적어 두고 수업 시간에 질문해 보세요.</p>
               </div>
             </div>
             <span id="question-saved-badge" class="hidden px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
@@ -318,7 +307,6 @@
             title: "1. 등속 운동과 자유 낙하 운동",
             description: "속력 계산, 등속 운동의 그래프와 특징, 중력에 의한 자유 낙하 운동",
             questions: [
-              // OX 퀴즈 (원본 345번)
               {
                 id: "s31_ox1",
                 sourceNo: "수준별 1000제 #345-(1)",
@@ -351,7 +339,6 @@
                 answer: "O",
                 explanation: "시간에 따라 속력이 일정하게 유지되는 운동을 등속 운동이라고 한다."
               },
-              // 5지선다형
               {
                 id: "s31_mc1",
                 sourceNo: "수준별 1000제 #337",
@@ -445,7 +432,6 @@
                 answer: "5",
                 explanation: "위로 던져 올린 공은 중력이 작용하여 속력이 변한다."
               },
-              // 주관식 / 서술형 (채점 X, 모범답안 & 해설 제공)
               {
                 id: "s31_sa1",
                 sourceNo: "수준별 1000제 #338",
@@ -493,7 +479,6 @@
             title: "2. 일과 에너지",
             description: "과학에서의 일의 정의와 계산, 중력에 의한 위치 에너지, 운동 에너지와 일의 전환",
             questions: [
-              // OX 퀴즈
               {
                 id: "s32_ox1",
                 sourceNo: "수준별 1000제 #397-(1)",
@@ -526,7 +511,6 @@
                 answer: "X",
                 explanation: "물체가 일을 할 때에는 한 일의 양만큼 물체의 에너지가 감소하게 된다."
               },
-              // 5지선다형
               {
                 id: "s32_mc1",
                 sourceNo: "수준별 1000제 #426",
@@ -614,7 +598,6 @@
                 answer: "5",
                 explanation: "$\\text{해 준 일의 양} = \\text{운동 에너지의 증가량} = \\frac{1}{2} \\times 2\\text{ kg} \\times \\{(10\\text{ m/s})^2 - (5\\text{ m/s})^2\\} = 75\\text{ J}$"
               },
-              // 주관식 / 서술형
               {
                 id: "s32_sa1",
                 sourceNo: "수준별 1000제 #433",
@@ -670,7 +653,6 @@
             title: "1. 역학적 에너지 전환과 보존",
             description: "자유 낙하·연직 투상·진자·롤러코스터에서의 역학적 에너지 전환과 보존 계산",
             questions: [
-              // OX 퀴즈
               {
                 id: "s61_ox1",
                 sourceNo: "수준별 1000제 #754-(1)",
@@ -703,7 +685,6 @@
                 answer: "O",
                 explanation: "진자가 양 끝 최고점에 도달하면 순간적으로 멈추므로 속력이 $0$이고 운동 에너지도 $0$이다."
               },
-              // 5지선다형
               {
                 id: "s61_mc1",
                 sourceNo: "수준별 1000제 #757",
@@ -776,7 +757,6 @@
                 answer: "1",
                 explanation: "야구공의 처음 운동 에너지는 모두 최고점에서의 위치 에너지로 전환된다. $\\frac{1}{2} \\times 1\\text{ kg} \\times (9.8\\text{ m/s})^2 = (9.8 \\times 1)\\text{ N} \\times h$이므로 $h = 4.9\\text{ m}$이다."
               },
-              // 주관식 / 서술형
               {
                 id: "s61_sa1",
                 sourceNo: "수준별 1000제 #805",
@@ -824,7 +804,6 @@
             title: "2. 전기 에너지의 발생과 전환",
             description: "발전의 원리(전자기 유도), 전기 기구에서의 에너지 전환, 소비 전력과 전력량 계산",
             questions: [
-              // OX 퀴즈
               {
                 id: "s62_ox1",
                 sourceNo: "수준별 1000제 #813-(1)",
@@ -857,7 +836,6 @@
                 answer: "X",
                 explanation: "정격 전압인 $220\\text{ V}$의 전압을 걸었을 때 소비 전력은 $44\\text{ W}$이다. $44\\text{ W}$는 $1$초에 $44\\text{ J}$의 전기 에너지를 소비하는 것을 뜻한다."
               },
-              // 5지선다형
               {
                 id: "s62_mc1",
                 sourceNo: "수준별 1000제 #831",
@@ -945,7 +923,6 @@
                 answer: "2",
                 explanation: "$\\text{전력량} = \\text{전력} \\times \\text{시간} = 22\\text{ W} \\times 4\\text{ h} = 88\\text{ Wh}$"
               },
-              // 주관식 / 서술형
               {
                 id: "s62_sa1",
                 sourceNo: "수준별 1000제 #823",
@@ -1000,9 +977,7 @@
       subId: null,
       selectedType: "ALL", // ALL | OX | MC | SA
       userAnswers: {},
-      isGraded: false,
-      currentBatchIds: [],
-      records: []
+      isGraded: false
     };
 
     // =========================================================================
@@ -1074,7 +1049,6 @@
         state.selectedType = "ALL";
         state.userAnswers = {};
         state.isGraded = false;
-        state.currentBatchIds = [];
         backBtn.classList.remove('hidden');
         renderQuizView();
       }
@@ -1140,7 +1114,7 @@
       const container = document.getElementById('major-list');
       container.innerHTML = '';
 
-      CURRICULUM.forEach((major, idx) => {
+      CURRICULUM.forEach((major) => {
         const totalQ = major.subUnits.reduce((acc, s) => acc + s.questions.length, 0);
         const card = document.createElement('button');
         card.type = "button";
@@ -1222,7 +1196,6 @@
       state.selectedType = type;
       state.userAnswers = {};
       state.isGraded = false;
-      state.currentBatchIds = [];
       renderQuizView();
     }
 
@@ -1325,7 +1298,6 @@
         let feedbackHtml = '';
         if (state.isGraded) {
           if (q.type === 'SA') {
-            // 주관식은 채점하지 않고 모범답안과 해설만 제시
             feedbackHtml = `
               <div class="mt-4 pt-4 border-t border-amber-200 bg-amber-50/70 rounded-xl p-4 space-y-2 text-sm">
                 <div class="flex flex-wrap items-center gap-2">
@@ -1401,7 +1373,6 @@
     function resetCurrentQuiz() {
       state.userAnswers = {};
       state.isGraded = false;
-      state.currentBatchIds = [];
       renderQuizView();
       showToast("답안이 초기화되었습니다.", "🔄");
     }
@@ -1424,23 +1395,6 @@
       return q.answer;
     }
 
-    function stripLatexForExport(text) {
-      return String(text || '')
-        .replace(/<br\s*\/?>/gi, ' / ')
-        .replace(/<[^>]*>/g, '')
-        .replace(/\$\$/g, '')
-        .replace(/\$/g, '')
-        .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1/$2)')
-        .replace(/\\text\{([^}]+)\}/g, '$1')
-        .replace(/\\times/g, '×')
-        .replace(/\\cdot/g, '·')
-        .replace(/\\propto/g, '∝')
-        .replace(/\\;/g, ' ')
-        .replace(/\\\{|\\}/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
-
     function gradeQuiz() {
       const questions = getFilteredQuestions();
       if (questions.length === 0) return;
@@ -1453,52 +1407,21 @@
       }
 
       const nowStr = getFormattedTimestamp();
-      const { major, sub } = getCurrentUnitObjects();
-      const typeLabelMap = { OX: "OX퀴즈", MC: "5지선다형", SA: "주관식·서술형" };
-
       let objectiveTotal = 0;
       let objectiveCorrect = 0;
       let subjectiveTotal = 0;
-      state.currentBatchIds = [];
 
-      questions.forEach((q, idx) => {
+      questions.forEach((q) => {
         const rawAns = String(state.userAnswers[q.id] || '').trim();
-        let resultLabel = "";
-
         if (q.type === 'SA') {
           subjectiveTotal++;
-          resultLabel = "모범답안 확인";
         } else {
           objectiveTotal++;
-          const evalRes = evaluateObjective(q, rawAns);
-          if (evalRes.isCorrect) objectiveCorrect++;
-          resultLabel = evalRes.label;
+          if (evaluateObjective(q, rawAns).isCorrect) objectiveCorrect++;
         }
-
-        const displayStudentAns = q.type === 'MC' && rawAns
-          ? `${rawAns}번 (${stripLatexForExport(q.options[Number(rawAns) - 1] || '')})`
-          : (rawAns || '(미작성)');
-
-        const rec = {
-          timestamp: nowStr,
-          majorUnit: major.title,
-          subUnit: sub.title,
-          sourceNo: q.sourceNo,
-          qType: typeLabelMap[q.type],
-          qNum: idx + 1,
-          question: stripLatexForExport(q.question),
-          studentAnswer: displayStudentAns,
-          correctAnswer: stripLatexForExport(formatCorrectAnswer(q)),
-          result: resultLabel,
-          teacherQuestion: ""
-        };
-
-        const insertedIdx = state.records.push(rec) - 1;
-        state.currentBatchIds.push(insertedIdx);
       });
 
       state.isGraded = true;
-      updateRecordCountBadge();
       renderQuizView();
       playSuccessChime();
 
@@ -1506,10 +1429,10 @@
       const subtext = document.getElementById('result-subtext');
       if (objectiveTotal > 0 && subjectiveTotal > 0) {
         headline.textContent = `객관식 ${objectiveTotal}문항 중 ${objectiveCorrect}문항 정답! (주관식 ${subjectiveTotal}문항은 모범답안 확인)`;
-        subtext.textContent = `작성 시각(${nowStr}) 기준으로 기록되었습니다. 각 문항 아래의 해설과 모범답안을 꼼꼼히 확인해 보세요.`;
+        subtext.textContent = `채점 시각(${nowStr}) 기준으로 확인되었습니다. 각 문항 아래의 해설과 모범답안을 꼼꼼히 살펴보세요.`;
       } else if (objectiveTotal > 0) {
         headline.textContent = `객관식 ${objectiveTotal}문항 중 ${objectiveCorrect}문항 정답!`;
-        subtext.textContent = `작성 시각(${nowStr}) 기준으로 기록되었습니다. 틀린 문제는 해설을 보며 다시 점검해 보세요.`;
+        subtext.textContent = `채점 시각(${nowStr}) 기준으로 확인되었습니다. 틀린 문제는 해설을 보며 다시 점검해 보세요.`;
       } else {
         headline.textContent = `주관식·서술형 ${subjectiveTotal}문항 모범답안 및 해설 공개!`;
         subtext.textContent = `주관식 문항은 자동 채점하지 않습니다. 위 문항별 모범답안·해설과 자신의 풀이를 직접 비교해 보세요.`;
@@ -1528,83 +1451,13 @@
         return;
       }
 
-      state.currentBatchIds.forEach(idx => {
-        if (state.records[idx]) {
-          state.records[idx].teacherQuestion = questionText;
-        }
-      });
-
       document.getElementById('question-saved-badge').classList.remove('hidden');
-      document.getElementById('question-status-text').textContent = `저장 시각: ${getFormattedTimestamp()} · 엑셀 내보내기 시 함께 포함됩니다.`;
+      document.getElementById('question-status-text').textContent = `저장 시각: ${getFormattedTimestamp()}`;
       playNotifySound();
-      showToast("질문이 저장되었습니다! 엑셀 내보내기에 반영됩니다.", "✉️");
+      showToast("질문 메모가 저장되었습니다!", "✉️");
     }
 
-    function updateRecordCountBadge() {
-      document.getElementById('record-count-badge').textContent = String(state.records.length);
-    }
-
-    // =========================================================================
-    // 8. EXCEL (.XLSX) EXPORT (개인정보 항목 제외)
-    // =========================================================================
-    function exportToExcel() {
-      if (state.records.length === 0) {
-        showToast("아직 채점 완료된 기록이 없습니다. 먼저 문제를 풀고 채점하기를 눌러주세요.", "⚠️");
-        return;
-      }
-
-      const wb = XLSX.utils.book_new();
-
-      const rows1 = state.records.map(r => ({
-        "작성시각(PC시간)": r.timestamp,
-        "대단원": r.majorUnit,
-        "소단원": r.subUnit,
-        "출처번호": r.sourceNo,
-        "문항유형": r.qType,
-        "학생작성답안": r.studentAnswer,
-        "정답/모범답안": r.correctAnswer,
-        "채점결과": r.result,
-        "문제내용": r.question,
-        "질문 메모": r.teacherQuestion || ""
-      }));
-
-      const ws1 = XLSX.utils.json_to_sheet(rows1);
-      ws1['!cols'] = [
-        { wch: 20 }, { wch: 20 }, { wch: 26 }, { wch: 22 }, { wch: 14 },
-        { wch: 28 }, { wch: 32 }, { wch: 14 }, { wch: 48 }, { wch: 36 }
-      ];
-      XLSX.utils.book_append_sheet(wb, ws1, "과학형성평가결과");
-
-      const questionMap = new Map();
-      state.records.forEach(r => {
-        if (r.teacherQuestion && r.teacherQuestion.trim() !== "") {
-          const key = `${r.timestamp}_${r.subUnit}_${r.teacherQuestion}`;
-          if (!questionMap.has(key)) {
-            questionMap.set(key, {
-              "작성시각(PC시간)": r.timestamp,
-              "단원": `${r.majorUnit} > ${r.subUnit}`,
-              "질문 내용": r.teacherQuestion
-            });
-          }
-        }
-      });
-
-      const rows2 = questionMap.size > 0
-        ? Array.from(questionMap.values())
-        : [{ "안내": "작성된 질문이 없습니다." }];
-      const ws2 = XLSX.utils.json_to_sheet(rows2);
-      ws2['!cols'] = [{ wch: 20 }, { wch: 40 }, { wch: 55 }];
-      XLSX.utils.book_append_sheet(wb, ws2, "질문 모음");
-
-      const dateTag = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      const filename = `중3과학_형성평가결과_${dateTag}.xlsx`;
-
-      XLSX.writeFile(wb, filename);
-      playNotifySound();
-      showToast(`엑셀 파일(${filename})이 다운로드되었습니다!`, "📥");
-    }
-
-    // Boot directly into Major Unit view (No login screen)
+    // Boot directly into Major Unit view
     navigateTo('major');
     startClock();
   </script>
