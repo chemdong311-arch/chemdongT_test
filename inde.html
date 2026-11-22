@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>중3 과학 자기주도 형성평가 (비상교육)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <!-- SheetJS for Excel Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .katex { font-size: 1.04em; }
+    .card-hover {
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar (No personal info required) -->
+  <header id="app-header" class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <button type="button" onclick="navigateTo('major')" class="flex items-center gap-2.5 text-left">
+        <div class="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+          ⚡
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 leading-tight">중3 과학 자기주도 형성평가</h1>
+          <p class="text-xs text-slate-500">비상교육 중학교 과학 3 · 수준별 1000제 &amp; 서논술형 평가</p>
+        </div>
+      </button>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Sound Toggle -->
+        <button id="btn-sound-toggle" type="button" onclick="toggleSound()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition">
+          <span id="sound-icon">🔊</span>
+          <span id="sound-label">효과음 ON</span>
+        </button>
+
+        <!-- Excel Export Button -->
+        <button type="button" onclick="exportToExcel()"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
+          <span>📥</span>
+          <span>엑셀로 내보내기</span>
+          <span id="record-count-badge" class="ml-0.5 px-1.5 py-0.5 bg-emerald-800 text-emerald-100 rounded-full text-[11px]">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
+
+    <!-- Breadcrumb Navigation -->
+    <nav id="breadcrumb-bar" class="mb-5 flex flex-wrap items-center justify-between gap-2 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
+      <ol id="breadcrumb-list" class="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-600"></ol>
+      <button id="btn-go-back" type="button" onclick="goBack()"
+        class="hidden inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+        <span>←</span>
+        <span>이전 단계로</span>
+      </button>
+    </nav>
+
+    <!-- STEP 1: Major Unit (대단원) -->
+    <section id="view-major" class="space-y-4">
+      <div class="mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-teal-600">STEP 1 · 대단원 선택</span>
+        <h2 class="text-xl font-extrabold text-slate-900 mt-0.5">학습할 과학 대단원을 선택하세요</h2>
+        <p class="text-sm text-slate-500 mt-1">별도의 로그인이나 개인정보 입력 없이 바로 문제를 풀고 해설을 확인할 수 있습니다.</p>
+      </div>
+      <div id="major-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- STEP 2: Sub Unit (소단원 / 중단원) -->
+    <section id="view-sub" class="hidden space-y-4">
+      <div class="mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-teal-600">STEP 2 · 소단원 선택</span>
+        <h2 id="sub-heading" class="text-xl font-extrabold text-slate-900 mt-0.5">소단원을 선택하세요</h2>
+      </div>
+      <div id="sub-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- STEP 3: Question Type Selection & Quiz Arena -->
+    <section id="view-quiz" class="hidden space-y-6">
+      <!-- Quiz Header & Type Filter -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <span id="quiz-unit-badge" class="inline-block px-2.5 py-1 rounded-md bg-teal-50 text-teal-700 text-xs font-bold mb-1.5"></span>
+            <h2 id="quiz-title" class="text-xl font-extrabold text-slate-900"></h2>
+            <p id="quiz-desc" class="text-sm text-slate-500 mt-0.5"></p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-400 block">현재 PC 시각</span>
+            <span id="live-clock" class="text-xs font-mono font-semibold text-slate-600"></span>
+          </div>
+        </div>
+
+        <!-- Question Type Tabs -->
+        <div class="pt-3 border-t border-slate-100">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <span class="text-xs font-bold text-slate-500">문항 유형 선택</span>
+            <span class="text-[11px] font-medium text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+              ※ 주관식(서술형)은 자동 채점하지 않고 모범답안과 해설을 제공합니다.
+            </span>
+          </div>
+          <div id="type-selector" class="flex flex-wrap gap-2"></div>
+        </div>
+      </div>
+
+      <!-- Questions Container -->
+      <div id="questions-container" class="space-y-5"></div>
+
+      <!-- Submit / Grade Button -->
+      <div id="quiz-actions" class="flex flex-wrap items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <p class="text-sm text-slate-600">문항을 모두 작성한 뒤 <strong>채점하기</strong>를 누르면 정답과 해설이 함께 표시됩니다.</p>
+        <div class="flex items-center gap-2.5">
+          <button type="button" onclick="resetCurrentQuiz()"
+            class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold transition">
+            다시 풀기
+          </button>
+          <button type="button" onclick="gradeQuiz()"
+            class="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold shadow-md transition">
+            채점하기 (해설 보기)
+          </button>
+        </div>
+      </div>
+
+      <!-- Grading Result Summary + Ask Teacher Box -->
+      <div id="result-panel" class="hidden space-y-5">
+        <div class="bg-gradient-to-br from-slate-900 to-teal-950 text-white rounded-2xl p-6 shadow-lg">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="px-2.5 py-0.5 rounded-full bg-teal-500/30 border border-teal-400/40 text-xs font-bold text-teal-200">
+                  채점 및 해설 확인 완료
+                </span>
+              </div>
+              <h3 id="result-headline" class="text-2xl font-extrabold mt-1"></h3>
+              <p id="result-subtext" class="text-sm text-slate-300 mt-1"></p>
+            </div>
+            <div class="flex flex-wrap gap-2.5">
+              <button type="button" onclick="exportToExcel()"
+                class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold shadow transition flex items-center gap-1.5">
+                <span>📥</span>
+                <span>엑셀로 내보내기</span>
+              </button>
+              <button type="button" onclick="goBack()"
+                class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition">
+                다른 소단원 선택
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ask Teacher Section (Appears after grading) -->
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 shadow-sm space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">🙋‍♂️</span>
+              <div>
+                <h4 class="text-base font-extrabold text-amber-950">선생님께 질문 남기기 (메모)</h4>
+                <p class="text-xs text-amber-800">이해가 잘 안 되는 문항 번호나 궁금한 점을 적어두면 엑셀 파일 내보내기 시 함께 저장됩니다.</p>
+              </div>
+            </div>
+            <span id="question-saved-badge" class="hidden px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
+              ✓ 저장 완료
+            </span>
+          </div>
+
+          <textarea id="teacher-question-input" rows="3"
+            placeholder="예: 766번에서 감소한 위치 에너지가 운동 에너지가 되는 계산 과정이 헷갈립니다."
+            class="w-full rounded-xl border border-amber-300 bg-white p-3.5 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none"></textarea>
+
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span id="question-status-text" class="text-xs text-amber-700 font-medium"></span>
+            <button type="button" onclick="submitTeacherQuestion()"
+              class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold shadow-sm transition flex items-center gap-1.5">
+              <span>✉️</span>
+              <span>질문 저장하기</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl text-sm font-medium flex items-center gap-2.5">
+    <span id="toast-icon">ℹ️</span>
+    <span id="toast-msg"></span>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 0. SOUND FX (Web Audio API)
+    // =========================================================================
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playClickSound() {
+      if (!soundEnabled) return;
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(640, now);
+      osc.frequency.exponentialRampToValueAtTime(350, now + 0.055);
+      gain.gain.setValueAtTime(0.13, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.065);
+    }
+
+    function playSuccessChime() {
+      if (!soundEnabled) return;
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const now = ctx.currentTime + idx * 0.08;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      });
+    }
+
+    function playNotifySound() {
+      if (!soundEnabled) return;
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const notes = [587.33, 880];
+      notes.forEach((freq, idx) => {
+        const now = ctx.currentTime + idx * 0.09;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.14, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.22);
+      });
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('sound-icon');
+      const label = document.getElementById('sound-label');
+      if (soundEnabled) {
+        icon.textContent = '🔊';
+        label.textContent = '효과음 ON';
+        playClickSound();
+      } else {
+        icon.textContent = '🔇';
+        label.textContent = '효과음 OFF';
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (btn && btn.id !== 'btn-sound-toggle') {
+        playClickSound();
+      }
+    });
+
+    // =========================================================================
+    // 1. CURRICULUM & QUESTION BANK (비상교육 중등 과학 3 PDF 원본 번호·해설 1:1 매칭)
+    // =========================================================================
+    const CURRICULUM = [
+      {
+        id: "major_3",
+        title: "Ⅲ. 운동과 에너지",
+        subtitle: "비상교육 중학교 과학 3 · 대단원 Ⅲ",
+        description: "등속 운동과 자유 낙하 운동의 특징을 이해하고, 과학에서의 일과 위치·운동 에너지의 관계를 학습합니다.",
+        subUnits: [
+          {
+            id: "sub_3_1",
+            title: "1. 등속 운동과 자유 낙하 운동",
+            description: "속력 계산, 등속 운동의 그래프와 특징, 중력에 의한 자유 낙하 운동",
+            questions: [
+              // OX 퀴즈 (원본 345번)
+              {
+                id: "s31_ox1",
+                sourceNo: "수준별 1000제 #345-(1)",
+                type: "OX",
+                question: "등속 운동을 하는 물체에는 힘이 작용한다.",
+                answer: "X",
+                explanation: "등속 운동을 하는 물체에는 힘이 작용하지 않는다(알짜힘이 0이다)."
+              },
+              {
+                id: "s31_ox2",
+                sourceNo: "수준별 1000제 #345-(2)",
+                type: "OX",
+                question: "등속 운동을 하는 물체의 위치는 시간에 따라 변하지 않는다.",
+                answer: "X",
+                explanation: "등속 운동을 하는 물체의 위치는 시간에 따라 일정하게 변한다."
+              },
+              {
+                id: "s31_ox3",
+                sourceNo: "수준별 1000제 #345-(3)",
+                type: "OX",
+                question: "등속 운동을 하는 물체는 같은 시간 동안 이동한 거리가 일정하다.",
+                answer: "O",
+                explanation: "등속 운동은 속력이 일정하므로 같은 시간 동안 이동한 거리가 일정하다."
+              },
+              {
+                id: "s31_ox4",
+                sourceNo: "수준별 1000제 #345-(4)",
+                type: "OX",
+                question: "등속 운동은 속력이 일정한 운동이다.",
+                answer: "O",
+                explanation: "시간에 따라 속력이 일정하게 유지되는 운동을 등속 운동이라고 한다."
+              },
+              // 5지선다형
+              {
+                id: "s31_mc1",
+                sourceNo: "수준별 1000제 #337",
+                type: "MC",
+                question: "$1$시간에 $36\\text{ km}$를 움직이는 자동차의 속력은?",
+                options: ["$5\\text{ m/s}$", "$10\\text{ m/s}$", "$18\\text{ m/s}$", "$36\\text{ m/s}$", "$72\\text{ m/s}$"],
+                answer: "2",
+                explanation: "$\\text{속력} = \\frac{\\text{이동 거리}}{\\text{걸린 시간}} = \\frac{36000\\text{ m}}{3600\\text{ s}} = 10\\text{ m/s}$"
+              },
+              {
+                id: "s31_mc2",
+                sourceNo: "수준별 1000제 #353",
+                type: "MC",
+                question: "다음 물체들을 진공 상태의 같은 높이에서 동시에 떨어뜨릴 때 가장 먼저 바닥에 떨어지는 것은?",
+                options: [
+                  "질량이 $1\\text{ g}$인 깃털",
+                  "질량이 $50\\text{ g}$인 나무",
+                  "질량이 $100\\text{ g}$인 돌",
+                  "질량이 $200\\text{ g}$인 쇠구슬",
+                  "모두 동시에 떨어진다."
+                ],
+                answer: "5",
+                explanation: "진공 상태에서 낙하하는 물체는 질량에 관계없이 속력이 1초마다 약 $9.8\\text{ m/s}$씩 일정하게 빨라지므로 모두 동시에 떨어진다."
+              },
+              {
+                id: "s31_mc3",
+                sourceNo: "수준별 1000제 #354",
+                type: "MC",
+                question: "물체의 빠르기를 비교하는 방법으로 가장 적절한 것은?",
+                options: [
+                  "걸린 시간을 비교한다.",
+                  "이동한 거리를 비교한다.",
+                  "이동한 방향을 비교한다.",
+                  "같은 시간 동안 이동한 거리를 비교한다.",
+                  "같은 시간 동안 이동한 방향을 비교한다."
+                ],
+                answer: "4",
+                explanation: "물체는 같은 시간 동안 이동한 거리가 길수록 빠르다."
+              },
+              {
+                id: "s31_mc4",
+                sourceNo: "수준별 1000제 #357",
+                type: "MC",
+                question: "다음은 운동하고 있는 물체 A~D를 나타낸 것이다. 속력이 빠른 것부터 순서대로 옳게 배열한 것은?<br><div class='mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm space-y-1'><div>• A: $2$시간 동안 $144\\text{ km}$를 달리는 자동차</div><div>• B: $100\\text{ m}$를 $20$초에 달리는 사람</div><div>• C: $1$분에 $2400\\text{ m}$를 달리는 치타</div><div>• D: 시속 $108\\text{ km}$로 날아가는 야구공</div></div>",
+                options: ["A - B - C - D", "B - C - A - D", "B - D - C - A", "C - A - B - D", "C - D - A - B"],
+                answer: "5",
+                explanation: "각 물체의 속력을 $\\text{m/s}$로 환산하면 A: $\\frac{144000\\text{ m}}{7200\\text{ s}} = 20\\text{ m/s}$, B: $\\frac{100\\text{ m}}{20\\text{ s}} = 5\\text{ m/s}$, C: $\\frac{2400\\text{ m}}{60\\text{ s}} = 40\\text{ m/s}$, D: $\\frac{108000\\text{ m}}{3600\\text{ s}} = 30\\text{ m/s}$이다. 따라서 빠른 순서는 C - D - A - B이다."
+              },
+              {
+                id: "s31_mc5",
+                sourceNo: "수준별 1000제 #363",
+                type: "MC",
+                question: "속력에 대한 설명으로 옳지 **않은** 것은?",
+                options: [
+                  "물체의 빠르기를 나타낸다.",
+                  "단위 시간 동안 이동한 거리이다.",
+                  "단위로는 $\\text{m/s}$, $\\text{km/h}$ 등을 사용한다.",
+                  "같은 시간 동안 이동 거리가 길수록 빠르다.",
+                  "같은 거리를 이동하는 데 걸린 시간이 길수록 빠르다."
+                ],
+                answer: "5",
+                explanation: "$\\text{속력} = \\frac{\\text{이동 거리}}{\\text{걸린 시간}}$이므로 같은 거리를 이동할 때 걸린 시간이 짧을수록 속력이 빠르다."
+              },
+              {
+                id: "s31_mc6",
+                sourceNo: "수준별 1000제 #366",
+                type: "MC",
+                question: "등속 운동에 대한 설명으로 옳지 **않은** 것은?",
+                options: [
+                  "시간에 관계없이 속력이 일정하다.",
+                  "시간에 관계없이 이동 거리가 일정하다.",
+                  "같은 시간 동안 이동한 거리가 일정하다.",
+                  "물체에 작용하는 모든 힘을 합한 값이 $0$이다.",
+                  "이러한 운동을 하는 예로 컨베이어, 에스컬레이터 등이 있다."
+                ],
+                answer: "2",
+                explanation: "등속 운동을 하는 물체의 이동 거리는 시간에 비례하여 일정하게 증가한다."
+              },
+              {
+                id: "s31_mc7",
+                sourceNo: "수준별 1000제 #367",
+                type: "MC",
+                question: "등속 운동을 하는 경우로 옳지 **않은** 것은?",
+                options: [
+                  "무빙워크",
+                  "스키장의 리프트",
+                  "컨베이어",
+                  "운행 중인 에스컬레이터",
+                  "위로 던져 올린 공"
+                ],
+                answer: "5",
+                explanation: "위로 던져 올린 공은 중력이 작용하여 속력이 변한다."
+              },
+              // 주관식 / 서술형 (채점 X, 모범답안 & 해설 제공)
+              {
+                id: "s31_sa1",
+                sourceNo: "수준별 1000제 #338",
+                type: "SA",
+                question: "$20\\text{ m/s}$의 일정한 속력으로 달리는 오토바이가 $12\\text{ km}$ 떨어진 우체국까지 가는 데 몇 분이 걸리는지 구하시오.",
+                answer: "$10$분",
+                explanation: "$\\text{걸린 시간} = \\frac{12\\text{ km}}{20\\text{ m/s}} = \\frac{12000\\text{ m}}{20\\text{ m/s}} = 600\\text{ s} = 10\\text{분}$"
+              },
+              {
+                id: "s31_sa2",
+                sourceNo: "수준별 1000제 #346",
+                type: "SA",
+                question: "$6\\text{ km/h}$의 일정한 속력으로 달리는 종현이가 $10$분 동안 이동한 거리는 몇 $\\text{m}$인지 구하시오.",
+                answer: "$1000\\text{ m}$",
+                explanation: "$\\text{이동 거리} = 6\\text{ km/h} \\times 10\\text{분} = \\frac{6000\\text{ m}}{3600\\text{ s}} \\times (10 \\times 60)\\text{ s} = 1000\\text{ m}$"
+              },
+              {
+                id: "s31_sa3",
+                sourceNo: "서논술형 평가 #1",
+                type: "SA",
+                question: "제시된 단어 **[시간, 속력]**을 모두 이용하여 등속 운동이란 무엇인지 설명하시오.",
+                answer: "시간에 따라 속력이 일정한 운동을 등속 운동이라고 한다.",
+                explanation: "등속 운동의 핵심 정의인 '시간에 따라 속력이 일정함'을 포함하여 서술한다."
+              },
+              {
+                id: "s31_sa4",
+                sourceNo: "서논술형 평가 #4",
+                type: "SA",
+                question: "제시된 단어 **[질량, 시간, 속력, $9.8\\text{ m/s}$]**를 모두 이용하여 질량이 다른 두 물체가 동시에 자유 낙하 할 때 시간에 따른 속력 변화를 비교하여 설명하시오.",
+                answer: "질량이 다른 두 물체가 동시에 자유 낙하 운동을 할 때 시간에 따른 속력 변화는 같다. 이때 두 물체는 모두 $1$초에 $9.8\\text{ m/s}$씩 속력이 빨라진다.",
+                explanation: "공기 저항이 없을 때 자유 낙하 하는 모든 물체는 질량에 관계없이 $1$초당 약 $9.8\\text{ m/s}$씩 속력이 일정하게 증가한다."
+              },
+              {
+                id: "s31_sa5",
+                sourceNo: "서논술형 평가 #13",
+                type: "SA",
+                question: "질량이 큰 돌과 작은 돌을 가는 실로 연결한 다음 두 돌을 같은 높이에서 동시에 자유 낙하 시켰다. 이때 실이 끊어질지 여부를 예상하고, 그렇게 생각한 까닭을 설명하시오.",
+                answer: "실은 끊어지지 않는다. 자유 낙하 하는 물체는 질량과 관계없이 속력이 빨라지는 정도가 같기 때문이다.",
+                explanation: "채점 기준: '실이 끊어지지 않는다'와 그 까닭(질량과 관계없이 속력 변화가 같음)을 모두 옳게 서술하면 100% 인정."
+              }
+            ]
+          },
+          {
+            id: "sub_3_2",
+            title: "2. 일과 에너지",
+            description: "과학에서의 일의 정의와 계산, 중력에 의한 위치 에너지, 운동 에너지와 일의 전환",
+            questions: [
+              // OX 퀴즈
+              {
+                id: "s32_ox1",
+                sourceNo: "수준별 1000제 #397-(1)",
+                type: "OX",
+                question: "일의 단위로는 $\\text{J}$, $\\text{N}$이 있다.",
+                answer: "X",
+                explanation: "일의 단위로는 $\\text{J}$(줄), $\\text{N}\\cdot\\text{m}$가 있다. ($\\text{N}$은 힘의 단위이다.)"
+              },
+              {
+                id: "s32_ox2",
+                sourceNo: "수준별 1000제 #397-(2)",
+                type: "OX",
+                question: "공부를 하거나 책을 읽는 경우는 과학에서의 일이 아니다.",
+                answer: "O",
+                explanation: "정신적인 활동은 작용한 힘의 크기와 힘의 방향으로 이동한 거리로 표현할 수 없으므로 과학에서의 일이 아니다."
+              },
+              {
+                id: "s32_ox3",
+                sourceNo: "수준별 1000제 #397-(3)",
+                type: "OX",
+                question: "가방을 메고 계단을 올라간 경우에는 가방에 일을 하지 않았다.",
+                answer: "X",
+                explanation: "가방을 메고 계단을 올라간 경우는 힘의 방향(위쪽)으로 가방이 이동(위쪽)하므로 일을 한 경우에 해당한다."
+              },
+              {
+                id: "s32_ox4",
+                sourceNo: "수준별 1000제 #412-(3)",
+                type: "OX",
+                question: "물체가 일을 하면 물체가 가지고 있던 에너지는 증가하게 된다.",
+                answer: "X",
+                explanation: "물체가 일을 할 때에는 한 일의 양만큼 물체의 에너지가 감소하게 된다."
+              },
+              // 5지선다형
+              {
+                id: "s32_mc1",
+                sourceNo: "수준별 1000제 #426",
+                type: "MC",
+                question: "철수가 교실 바닥에 놓인 질량이 $5\\text{ kg}$인 의자에 $20\\text{ N}$의 힘을 수평 방향으로 작용하여 $10\\text{ m}$ 끌고 갔다. 철수가 의자에 한 일의 양은?",
+                options: ["$49\\text{ J}$", "$50\\text{ J}$", "$100\\text{ J}$", "$200\\text{ J}$", "$490\\text{ J}$"],
+                answer: "4",
+                explanation: "$\\text{일의 양} = \\text{힘} \\times \\text{힘의 방향으로 이동한 거리} = 20\\text{ N} \\times 10\\text{ m} = 200\\text{ J}$"
+              },
+              {
+                id: "s32_mc2",
+                sourceNo: "수준별 1000제 #430",
+                type: "MC",
+                question: "수평면 위에 질량 $10\\text{ kg}$인 물체를 놓고 일정한 속력으로 천천히 $5\\text{ m}$ 끌고 가면서 $150\\text{ J}$의 일을 하였다. 이때 물체에 작용한 마찰력의 크기는? (단, 질량 $1\\text{ kg}$인 물체의 무게는 $9.8\\text{ N}$이다.)",
+                options: ["$30\\text{ N}$", "$50\\text{ N}$", "$98\\text{ N}$", "$150\\text{ N}$", "$490\\text{ N}$"],
+                answer: "1",
+                explanation: "$\\text{일의 양} = \\text{마찰력} \\times \\text{이동 거리}$이므로 $x \\times 5\\text{ m} = 150\\text{ J}$에서 마찰력의 크기 $x = 30\\text{ N}$이다."
+              },
+              {
+                id: "s32_mc3",
+                sourceNo: "수준별 1000제 #440",
+                type: "MC",
+                question: "과학에서의 일을 가장 많이 한 경우는?",
+                options: [
+                  "$50\\text{ N}$의 힘을 작용하여 책상을 $2\\text{ m}$ 밀고 갔다.",
+                  "$5\\text{ kg}$의 가방을 $1\\text{ m}$ 높이의 선반에 올려놓았다.",
+                  "$50\\text{ N}$의 가방을 들고 수평 방향으로 $10\\text{ m}$ 이동하였다.",
+                  "마찰이 없는 수평면에서 $5\\text{ kg}$의 가방을 $5\\text{ m/s}$의 일정한 속력으로 운동시켰다.",
+                  "$50\\text{ N}$의 교탁을 마찰이 없는 수평면에서 일정한 속력으로 $1\\text{ m}$ 이동시켰다."
+                ],
+                answer: "1",
+                explanation: "① $50\\text{ N} \\times 2\\text{ m} = 100\\text{ J}$, ② $(9.8 \\times 5)\\text{ N} \\times 1\\text{ m} = 49\\text{ J}$, ③ 힘과 이동 방향이 수직이므로 $0\\text{ J}$, ④·⑤ 작용하는 힘이 $0$이므로 $0\\text{ J}$이다."
+              },
+              {
+                id: "s32_mc4",
+                sourceNo: "수준별 1000제 #441",
+                type: "MC",
+                question: "일과 에너지에 대한 설명으로 옳지 **않은** 것은?",
+                options: [
+                  "$1$초 동안 할 수 있는 일의 양을 에너지라고 한다.",
+                  "에너지는 일을 할 수 있는 능력이다.",
+                  "에너지와 일은 서로 전환된다.",
+                  "물체에 일을 해 주면 물체의 에너지가 증가한다.",
+                  "에너지의 양은 그 에너지를 사용하여 한 일의 양으로 구할 수 있다."
+                ],
+                answer: "1",
+                explanation: "일을 할 수 있는 능력을 에너지라고 한다. ($1$초 동안 한 일의 양이 아니다.)"
+              },
+              {
+                id: "s32_mc5",
+                sourceNo: "수준별 1000제 #442",
+                type: "MC",
+                question: "중력에 의한 위치 에너지에 대한 설명으로 옳지 **않은** 것은?",
+                options: [
+                  "높은 곳에 있는 물체가 가지는 에너지이다.",
+                  "물체의 질량과 기준면에서의 높이에 각각 비례한다.",
+                  "지면에서 $1\\text{ m}$ 높이에 있는 질량 $1\\text{ kg}$인 물체가 가지는 중력에 의한 위치 에너지는 $1\\text{ J}$이다.",
+                  "기준면에 있는 물체의 중력에 의한 위치 에너지는 $0$이다.",
+                  "물체가 기준면까지 낙하하면서 할 수 있는 일의 양과 같다."
+                ],
+                answer: "3",
+                explanation: "지면에서 $1\\text{ m}$ 높이에 있는 질량 $1\\text{ kg}$인 물체의 위치 에너지는 $(9.8 \\times 1)\\text{ N} \\times 1\\text{ m} = 9.8\\text{ J}$이다."
+              },
+              {
+                id: "s32_mc6",
+                sourceNo: "수준별 1000제 #452",
+                type: "MC",
+                question: "지면으로부터 $10\\text{ m}$ 높이에서 질량이 $2\\text{ kg}$인 공을 가만히 놓아 낙하시켰다. 이 공이 지면에 닿는 순간의 운동 에너지($E_k$)와 속력($v$)을 옳게 짝 지은 것은? (단, 공기 저항은 무시한다.)",
+                options: [
+                  "$E_k = 98\\text{ J},\\; v = 10\\text{ m/s}$",
+                  "$E_k = 98\\text{ J},\\; v = 14\\text{ m/s}$",
+                  "$E_k = 196\\text{ J},\\; v = 10\\text{ m/s}$",
+                  "$E_k = 196\\text{ J},\\; v = 14\\text{ m/s}$",
+                  "$E_k = 294\\text{ J},\\; v = 14\\text{ m/s}$"
+                ],
+                answer: "4",
+                explanation: "지면에서의 운동 에너지 $= (9.8 \\times 2)\\text{ N} \\times 10\\text{ m} = 196\\text{ J}$. 또한 $\\frac{1}{2} \\times 2\\text{ kg} \\times v^2 = 196\\text{ J}$이므로 지면에 닿는 순간의 속력 $v = 14\\text{ m/s}$이다."
+              },
+              {
+                id: "s32_mc7",
+                sourceNo: "수준별 1000제 #456",
+                type: "MC",
+                question: "질량이 $2\\text{ kg}$인 물체가 $5\\text{ m/s}$의 속력으로 자유 낙하 하고 있다. 이 물체의 속력이 $2$배가 되기 위해서 물체의 운동 방향으로 해 주어야 하는 일의 양은?",
+                options: ["$5\\text{ J}$", "$10\\text{ J}$", "$25\\text{ J}$", "$50\\text{ J}$", "$75\\text{ J}$"],
+                answer: "5",
+                explanation: "$\\text{해 준 일의 양} = \\text{운동 에너지의 증가량} = \\frac{1}{2} \\times 2\\text{ kg} \\times \\{(10\\text{ m/s})^2 - (5\\text{ m/s})^2\\} = 75\\text{ J}$"
+              },
+              // 주관식 / 서술형
+              {
+                id: "s32_sa1",
+                sourceNo: "수준별 1000제 #433",
+                type: "SA",
+                question: "질량이 $2\\text{ kg}$인 물체를 $5\\text{ m}$ 높이까지 일정한 속력으로 들어 올리려고 한다. 물체에 작용해야 하는 힘 $F(\\text{N})$와 일의 양 $W(\\text{J})$를 각각 구하시오.",
+                answer: "$F = 19.6\\text{ N},\\; W = 98\\text{ J}$",
+                explanation: "작용해야 하는 힘 $F = 9.8 \\times 2 = 19.6\\text{ N}$, 일의 양 $W = \\text{물체의 무게} \\times \\text{들어 올린 높이} = 19.6\\text{ N} \\times 5\\text{ m} = 98\\text{ J}$"
+              },
+              {
+                id: "s32_sa2",
+                sourceNo: "수준별 1000제 #454",
+                type: "SA",
+                question: "자유 낙하 하는 두 물체 A(질량 $1\\text{ kg}$, 속력 $6\\text{ m/s}$), B(질량 $2\\text{ kg}$, 속력 $3\\text{ m/s}$)의 운동 에너지의 비($\\text{A} : \\text{B}$)를 구하시오.",
+                answer: "$2 : 1$",
+                explanation: "운동 에너지 $\\propto \\text{질량} \\times (\\text{속력})^2$이므로 A의 운동 에너지 : B의 운동 에너지 $= 1 \\times 6^2 : 2 \\times 3^2 = 36 : 18 = 2 : 1$이다."
+              },
+              {
+                id: "s32_sa3",
+                sourceNo: "서논술형 평가 #1",
+                type: "SA",
+                question: "제시된 단어 **[힘, 이동, 방향]**을 모두 이용하여 과학적 일에 대해 설명하시오.",
+                answer: "물체에 힘이 작용하여 물체가 힘의 방향으로 이동할 때 과학적 일을 한다고 한다.",
+                explanation: "힘의 작용, 물체의 이동, 힘의 방향과 이동 방향의 일치 여부를 포함하여 서술한다."
+              },
+              {
+                id: "s32_sa4",
+                sourceNo: "서논술형 평가 #7",
+                type: "SA",
+                question: "다이빙 선수가 다이빙대에서 뛰어내릴 때 낙하하는 거리가 커질수록 운동 에너지도 커지는 까닭을 **[일과 에너지의 관계]** 및 **[일과 이동 거리의 관계]**를 모두 언급하여 설명하시오.",
+                answer: "일과 에너지는 서로 전환되어 중력이 다이빙 선수에게 한 일은 선수의 운동 에너지로 전환된다. 이때 중력이 한 일의 양은 이동 거리에 비례하므로 선수의 낙하 거리가 커질수록 운동 에너지도 커진다.",
+                explanation: "중력이 한 일의 양은 물체의 질량과 이동 거리에 비례하며, 이 일이 모두 운동 에너지로 전환된다."
+              },
+              {
+                id: "s32_sa5",
+                sourceNo: "서논술형 평가 #10",
+                type: "SA",
+                question: "놀이터에서 그네를 탈 때 아람이는 '가장 낮은 곳에서는 운동 에너지만 가진다', 건우는 '가장 낮은 곳에서는 운동 에너지와 위치 에너지를 모두 가진다'고 설명했다. 아람이와 건우가 서로 다르게 생각한 까닭을 설명하시오.",
+                answer: "아람이와 건우가 위치 에너지의 기준면을 다르게 정했기 때문이다.",
+                explanation: "위치 에너지는 기준면에 따라 달라진다. 아람이가 잡은 기준면은 그네를 탈 때 가장 낮은 지점이고, 건우가 잡은 기준면은 놀이터 바닥이다."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "major_6",
+        title: "Ⅵ. 에너지 전환과 보존",
+        subtitle: "비상교육 중학교 과학 3 · 대단원 Ⅵ",
+        description: "역학적 에너지 전환과 보존 법칙을 이해하고, 발전 원리를 통한 전기 에너지의 발생과 전환·소비 전력을 학습합니다.",
+        subUnits: [
+          {
+            id: "sub_6_1",
+            title: "1. 역학적 에너지 전환과 보존",
+            description: "자유 낙하·연직 투상·진자·롤러코스터에서의 역학적 에너지 전환과 보존 계산",
+            questions: [
+              // OX 퀴즈
+              {
+                id: "s61_ox1",
+                sourceNo: "수준별 1000제 #754-(1)",
+                type: "OX",
+                question: "공기 저항과 마찰이 작용하지 않을 때, 물체의 위치 에너지와 운동 에너지의 합은 일정하게 보존된다.",
+                answer: "O",
+                explanation: "공기 저항과 마찰이 작용하지 않을 때, 물체의 위치 에너지와 운동 에너지의 합인 역학적 에너지는 일정하게 보존된다."
+              },
+              {
+                id: "s61_ox2",
+                sourceNo: "수준별 1000제 #754-(2)",
+                type: "OX",
+                question: "공기 저항과 마찰이 작용하지 않을 때, 낙하하는 물체의 위치 에너지는 운동 에너지로 전환된다.",
+                answer: "O",
+                explanation: "물체가 낙하하는 동안 높이가 낮아지며 감소한 위치 에너지가 운동 에너지로 전환된다."
+              },
+              {
+                id: "s61_ox3",
+                sourceNo: "수준별 1000제 #754-(3)",
+                type: "OX",
+                question: "공기 저항과 마찰이 작용하지 않을 때, 연직 위로 던져 올린 물체의 역학적 에너지는 점점 감소한다.",
+                answer: "X",
+                explanation: "공기 저항과 마찰이 작용하지 않을 때, 운동 에너지가 위치 에너지로 전환될 뿐 역학적 에너지는 일정하게 보존된다."
+              },
+              {
+                id: "s61_ox4",
+                sourceNo: "수준별 1000제 #763-(1)",
+                type: "OX",
+                question: "양 끝 최고점 A와 C 사이를 왕복 운동하는 진자에서 최고점 A에서의 속력은 $0$이다.",
+                answer: "O",
+                explanation: "진자가 양 끝 최고점에 도달하면 순간적으로 멈추므로 속력이 $0$이고 운동 에너지도 $0$이다."
+              },
+              // 5지선다형
+              {
+                id: "s61_mc1",
+                sourceNo: "수준별 1000제 #757",
+                type: "MC",
+                question: "낙하하는 물체의 낙하 거리에 따른 위치 에너지와 운동 에너지의 변화로 옳은 것은?",
+                options: [
+                  "위치 에너지: 증가 / 운동 에너지: 증가",
+                  "위치 에너지: 감소 / 운동 에너지: 증가",
+                  "위치 에너지: 증가 / 운동 에너지: 감소",
+                  "위치 에너지: 감소 / 운동 에너지: 감소",
+                  "위치 에너지: 일정 / 운동 에너지: 일정"
+                ],
+                answer: "2",
+                explanation: "낙하하는 동안 물체의 높이가 낮아지므로 위치 에너지는 감소하고, 속력이 빨라지므로 운동 에너지는 증가한다."
+              },
+              {
+                id: "s61_mc2",
+                sourceNo: "수준별 1000제 #766",
+                type: "MC",
+                question: "질량이 $2\\text{ kg}$인 물체를 $2.5\\text{ m}$ 높이에서 가만히 놓아 낙하시켰다. 지면으로부터 $0.5\\text{ m}$ 높이에서 물체의 위치 에너지, 운동 에너지, 역학적 에너지를 옳게 짝 지은 것은? (단, 공기 저항은 무시한다.)",
+                options: [
+                  "$9.8\\text{ J},\\; 39.2\\text{ J},\\; 49\\text{ J}$",
+                  "$9.8\\text{ J},\\; 49\\text{ J},\\; 58.8\\text{ J}$",
+                  "$9.8\\text{ J},\\; 58.8\\text{ J},\\; 49\\text{ J}$",
+                  "$39.2\\text{ J},\\; 9.8\\text{ J},\\; 49\\text{ J}$",
+                  "$39.2\\text{ J},\\; 58.8\\text{ J},\\; 49\\text{ J}$"
+                ],
+                answer: "1",
+                explanation: "위치 에너지 $= (9.8 \\times 2)\\text{ N} \\times 0.5\\text{ m} = 9.8\\text{ J}$, 운동 에너지 $= \\text{감소한 위치 에너지} = (9.8 \\times 2)\\text{ N} \\times (2.5 - 0.5)\\text{ m} = 39.2\\text{ J}$, 역학적 에너지 $= 9.8\\text{ J} + 39.2\\text{ J} = 49\\text{ J}$이다."
+              },
+              {
+                id: "s61_mc3",
+                sourceNo: "수준별 1000제 #771",
+                type: "MC",
+                question: "지면으로부터 $20\\text{ m}$ 높이에서 질량이 $5\\text{ kg}$인 공을 가만히 놓아 떨어뜨렸다. 공이 $15\\text{ m}$ 지점을 지날 때 공의 운동 에너지는? (단, 공기 저항은 무시한다.)",
+                options: ["$49\\text{ J}$", "$75\\text{ J}$", "$245\\text{ J}$", "$735\\text{ J}$", "$980\\text{ J}$"],
+                answer: "3",
+                explanation: "$15\\text{ m}$ 지점에서 공의 운동 에너지는 위치 에너지의 감소량과 같다. 따라서 $(9.8 \\times 5)\\text{ N} \\times (20 - 15)\\text{ m} = 245\\text{ J}$이다."
+              },
+              {
+                id: "s61_mc4",
+                sourceNo: "수준별 1000제 #773",
+                type: "MC",
+                question: "위치 에너지와 운동 에너지 사이의 전환이 일어나지 **않는** 경우는?",
+                options: [
+                  "빗면을 따라 공이 내려갈 때",
+                  "다이빙 선수가 다이빙을 할 때",
+                  "높이뛰기 선수가 뛰어오르고 있을 때",
+                  "달려오던 자전거가 오르막길을 오를 때",
+                  "수평면에서 수레가 일정한 속력으로 움직일 때"
+                ],
+                answer: "5",
+                explanation: "①·②는 위치 에너지 → 운동 에너지, ③·④는 운동 에너지 → 위치 에너지 전환이 일어난다. ⑤는 운동 에너지만 일정하게 가진 상태로 역학적 에너지 전환이 일어나지 않는다."
+              },
+              {
+                id: "s61_mc5",
+                sourceNo: "수준별 1000제 #794",
+                type: "MC",
+                question: "$10\\text{ m}$ 높이에서 질량이 $5\\text{ kg}$인 모형 비행기가 $6\\text{ m/s}$의 속력으로 날고 있을 때, 모형 비행기의 역학적 에너지는?",
+                options: ["$140\\text{ J}$", "$230\\text{ J}$", "$526\\text{ J}$", "$580\\text{ J}$", "$670\\text{ J}$"],
+                answer: "4",
+                explanation: "$\\text{역학적 에너지} = \\text{위치 에너지} + \\text{운동 에너지} = (9.8 \\times 5)\\text{ N} \\times 10\\text{ m} + \\frac{1}{2} \\times 5\\text{ kg} \\times (6\\text{ m/s})^2 = 490\\text{ J} + 90\\text{ J} = 580\\text{ J}$"
+              },
+              {
+                id: "s61_mc6",
+                sourceNo: "수준별 1000제 #795",
+                type: "MC",
+                question: "질량이 $1\\text{ kg}$인 야구공을 $9.8\\text{ m/s}$의 속력으로 연직 위로 던져 올리면, 야구공이 올라가는 최고 높이는? (단, 공기 저항은 무시한다.)",
+                options: ["$4.9\\text{ m}$", "$9.8\\text{ m}$", "$14.7\\text{ m}$", "$19.6\\text{ m}$", "$49\\text{ m}$"],
+                answer: "1",
+                explanation: "야구공의 처음 운동 에너지는 모두 최고점에서의 위치 에너지로 전환된다. $\\frac{1}{2} \\times 1\\text{ kg} \\times (9.8\\text{ m/s})^2 = (9.8 \\times 1)\\text{ N} \\times h$이므로 $h = 4.9\\text{ m}$이다."
+              },
+              // 주관식 / 서술형
+              {
+                id: "s61_sa1",
+                sourceNo: "수준별 1000제 #805",
+                type: "SA",
+                question: "질량이 $2\\text{ kg}$인 물체가 $5\\text{ m}$ 높이에서 빗면을 따라 미끄러져 바닥에 도달했을 때의 속력이 $8\\text{ m/s}$였다면, 빗면에서 마찰로 인해 발생한 역학적 에너지가 아닌 다른 형태의 에너지는 몇 $\\text{J}$인지 구하는 과정을 쓰시오.",
+                answer: "$34\\text{ J}$",
+                explanation: "다른 형태의 에너지 $= \\text{처음 위치 에너지} - \\text{나중 운동 에너지} = (9.8 \\times 2)\\text{ N} \\times 5\\text{ m} - \\frac{1}{2} \\times 2\\text{ kg} \\times (8\\text{ m/s})^2 = 98\\text{ J} - 64\\text{ J} = 34\\text{ J}$"
+              },
+              {
+                id: "s61_sa2",
+                sourceNo: "수준별 1000제 #807",
+                type: "SA",
+                question: "$20\\text{ m}$ 높이에서 정지해 있던 물체가 낙하하는 동안 운동 에너지가 위치 에너지의 $4$배가 되는 지점은 지면으로부터 몇 $\\text{m}$ 높이인지 풀이 과정과 함께 구하시오. (단, 공기 저항은 무시한다.)",
+                answer: "$4\\text{ m}$",
+                explanation: "$\\text{운동 에너지} : \\text{위치 에너지} = \\text{감소한 위치 에너지} : \\text{위치 에너지} = 9.8m(20 - h) : 9.8mh = 4 : 1$이므로 $4h = 20 - h$, 따라서 높이 $h = 4\\text{ m}$이다."
+              },
+              {
+                id: "s61_sa3",
+                sourceNo: "수준별 1000제 #808",
+                type: "SA",
+                question: "지면으로부터 $5\\text{ m}$ 높이에서 질량이 $4\\text{ kg}$인 물체를 $10\\text{ m/s}$의 속력으로 수평 방향으로 던졌다. 이 물체가 지면에 닿는 순간의 운동 에너지는 몇 $\\text{J}$인지 풀이 과정과 함께 구하시오. (단, 공기 저항은 무시한다.)",
+                answer: "$396\\text{ J}$",
+                explanation: "'지면에서 운동 에너지 = $5\\text{ m}$ 높이에서 역학적 에너지'이므로 $(9.8 \\times 4)\\text{ N} \\times 5\\text{ m} + \\frac{1}{2} \\times 4\\text{ kg} \\times (10\\text{ m/s})^2 = 196\\text{ J} + 200\\text{ J} = 396\\text{ J}$이다."
+              },
+              {
+                id: "s61_sa4",
+                sourceNo: "서논술형 평가 #3",
+                type: "SA",
+                question: "제시된 단어 **[위치 에너지, 운동 에너지, 감소, 증가, 전환, 보존]**을 모두 이용하여 공을 위로 던져 올렸을 때 공이 올라가는 동안의 에너지 변화를 설명하시오.",
+                answer: "공이 올라가는 동안 운동 에너지가 위치 에너지로 전환되는데, 이때 운동 에너지가 감소하는 만큼 위치 에너지가 증가하므로 역학적 에너지는 보존된다.",
+                explanation: "제시 단어를 모두 포함하여 에너지 전환과 역학적 에너지 보존의 인과 관계를 논리적으로 서술한다."
+              },
+              {
+                id: "s61_sa5",
+                sourceNo: "서논술형 평가 #8",
+                type: "SA",
+                question: "스카이다이빙을 하여 낙하산을 펴면 일정한 속력으로 낙하한다. 이때 역학적 에너지가 보존되는지 여부를 쓰고, 그렇게 생각한 까닭을 설명하시오.",
+                answer: "역학적 에너지는 보존되지 않는다. 물체가 일정한 속력으로 낙하하면 위치 에너지는 감소하지만 운동 에너지는 일정하기 때문이다.",
+                explanation: "채점 시 유의사항: 역학적 에너지가 보존되지 않는 이유로 공기 저항이 작용하기 때문이라고 설명한 경우도 정답으로 인정한다."
+              }
+            ]
+          },
+          {
+            id: "sub_6_2",
+            title: "2. 전기 에너지의 발생과 전환",
+            description: "발전의 원리(전자기 유도), 전기 기구에서의 에너지 전환, 소비 전력과 전력량 계산",
+            questions: [
+              // OX 퀴즈
+              {
+                id: "s62_ox1",
+                sourceNo: "수준별 1000제 #813-(1)",
+                type: "OX",
+                question: "발전은 코일을 통과하는 자기장이 변할 때 발생한다.",
+                answer: "O",
+                explanation: "코일 주위에서 자석이나 코일이 움직여 코일을 통과하는 자기장이 변할 때 코일에 전류가 흐른다."
+              },
+              {
+                id: "s62_ox2",
+                sourceNo: "수준별 1000제 #813-(2)",
+                type: "OX",
+                question: "전류는 자석을 코일에 가까이 할 때 발생하고, 코일을 자석에 가까이 할 때는 발생하지 않는다.",
+                answer: "X",
+                explanation: "코일을 자석 주위에서 움직일 때도 코일을 통과하는 자기장이 변하여 유도 전류가 발생한다."
+              },
+              {
+                id: "s62_ox3",
+                sourceNo: "수준별 1000제 #813-(3)",
+                type: "OX",
+                question: "자기력이 센 자석을 코일에 넣고 가만히 있으면 전류가 흐른다.",
+                answer: "X",
+                explanation: "자석을 코일에 넣고 가만히 있으면 코일을 통과하는 자기장의 변화가 없으므로 전류가 발생하지 않는다."
+              },
+              {
+                id: "s62_ox4",
+                sourceNo: "수준별 1000제 #824-(3)",
+                type: "OX",
+                question: "'$220\\text{ V} - 44\\text{ W}$'라고 표시된 엘이디등에 $220\\text{ V}$의 전압을 걸어 주면 $1$초마다 $0.2\\text{ J}$의 전기 에너지를 소비한다.",
+                answer: "X",
+                explanation: "정격 전압인 $220\\text{ V}$의 전압을 걸었을 때 소비 전력은 $44\\text{ W}$이다. $44\\text{ W}$는 $1$초에 $44\\text{ J}$의 전기 에너지를 소비하는 것을 뜻한다."
+              },
+              // 5지선다형
+              {
+                id: "s62_mc1",
+                sourceNo: "수준별 1000제 #831",
+                type: "MC",
+                question: "전류가 흐르지 **않는** 경우는?",
+                options: [
+                  "코일에 자석의 N극을 가까이 할 때",
+                  "코일에서 자석의 S극을 멀리 할 때",
+                  "자석의 두 극 사이에서 코일을 회전시킬 때",
+                  "자석 근처에 있는 코일을 자석에서 멀리 할 때",
+                  "코일 속에 자석의 N극을 넣고 움직이지 않을 때"
+                ],
+                answer: "5",
+                explanation: "자석이나 코일이 운동하여 코일을 통과하는 자기장이 변하는 경우에 전류가 흐른다. 따라서 자석과 코일이 움직이지 않는 경우에는 전류가 흐르지 않는다."
+              },
+              {
+                id: "s62_mc2",
+                sourceNo: "수준별 1000제 #834",
+                type: "MC",
+                question: "발전의 원리를 이용한 것으로 옳게 짝 지은 것은?",
+                options: [
+                  "전류계, 스피커",
+                  "전압계, 전동기",
+                  "발전기, 선풍기",
+                  "교통 카드, 도난 방지 장치",
+                  "교통 카드, 전자석 기중기"
+                ],
+                answer: "4",
+                explanation: "전류계, 전압계, 선풍기에 들어있는 전동기와 스피커는 자기장에서 전류가 받는 힘을 이용한 장치이고, 전자석 기중기는 전류에 의한 자기장을 이용한 장치이다. 교통 카드와 도난 방지 장치는 발전(전자기 유도)의 원리를 이용한다."
+              },
+              {
+                id: "s62_mc3",
+                sourceNo: "수준별 1000제 #837",
+                type: "MC",
+                question: "에너지 전환이 나머지 넷과 다른 것은?",
+                options: ["텔레비전", "전기밥솥", "전기난로", "전기토스터", "전기다리미"],
+                answer: "1",
+                explanation: "① 텔레비전에서는 전기 에너지가 빛과 운동(소리) 에너지로 전환된다. ②, ③, ④, ⑤는 전기 에너지가 열에너지로 전환되는 전기 기구이다."
+              },
+              {
+                id: "s62_mc4",
+                sourceNo: "수준별 1000제 #838",
+                type: "MC",
+                question: "전기 기구에서 이용하는 에너지 전환을 나타낸 것으로 옳지 **않은** 것은?",
+                options: [
+                  "전등: 전기 에너지 → 빛에너지",
+                  "스피커: 전기 에너지 → 운동 에너지",
+                  "선풍기: 전기 에너지 → 운동 에너지",
+                  "전기다리미: 전기 에너지 → 열에너지",
+                  "머리말리개: 전기 에너지 → 위치 에너지"
+                ],
+                answer: "5",
+                explanation: "머리말리개는 전기 에너지를 열에너지와 운동 에너지로 전환한다."
+              },
+              {
+                id: "s62_mc5",
+                sourceNo: "수준별 1000제 #839",
+                type: "MC",
+                question: "'$220\\text{ V} - 880\\text{ W}$'라고 표시된 전열기를 $5$분 동안 사용했을 때 소비한 전기 에너지는 몇 $\\text{J}$인가?",
+                options: ["$1100\\text{ J}$", "$4400\\text{ J}$", "$39600\\text{ J}$", "$66000\\text{ J}$", "$264000\\text{ J}$"],
+                answer: "5",
+                explanation: "$\\text{전기 에너지} = \\text{소비 전력}(\\text{W}) \\times \\text{사용 시간}(\\text{s}) = 880 \\times 60 \\times 5 = 264000\\text{ J}$이다."
+              },
+              {
+                id: "s62_mc6",
+                sourceNo: "수준별 1000제 #850",
+                type: "MC",
+                question: "정격 전압 $220\\text{ V}$, 소비 전력 $22\\text{ W}$라고 표시된 선풍기에 대한 설명으로 옳지 **않은** 것은?",
+                options: [
+                  "전기 에너지를 운동 에너지로 전환한다.",
+                  "$220\\text{ V}$에 연결했을 때 가장 잘 작동한다.",
+                  "소비 전력은 $22\\text{ W}$이다.",
+                  "$1$초에 $22\\text{ J}$의 전기 에너지를 소비한다.",
+                  "$1$시간 사용했을 때 $220\\text{ Wh}$의 전기 에너지를 사용한다."
+                ],
+                answer: "5",
+                explanation: "소비 전력이 $22\\text{ W}$인 선풍기를 $1$시간 사용했을 때의 전기 에너지(전력량)는 $22\\text{ W} \\times 1\\text{ h} = 22\\text{ Wh}$이다."
+              },
+              {
+                id: "s62_mc7",
+                sourceNo: "수준별 1000제 #851",
+                type: "MC",
+                question: "정격 전압 $220\\text{ V}$, 소비 전력 $22\\text{ W}$인 선풍기에 정격 전압을 걸어 $4$시간 동안 작동시켰을 때 선풍기가 소비한 전력량은?",
+                options: ["$22\\text{ Wh}$", "$88\\text{ Wh}$", "$220\\text{ Wh}$", "$5280\\text{ Wh}$", "$316.8\\text{ kWh}$"],
+                answer: "2",
+                explanation: "$\\text{전력량} = \\text{전력} \\times \\text{시간} = 22\\text{ W} \\times 4\\text{ h} = 88\\text{ Wh}$"
+              },
+              // 주관식 / 서술형
+              {
+                id: "s62_sa1",
+                sourceNo: "수준별 1000제 #823",
+                type: "SA",
+                question: "'$220\\text{ V} - 440\\text{ W}$'라고 표시된 전구에 정격 전압인 $220\\text{ V}$로 연결하여 $2$시간 동안 사용했을 때 전구가 사용한 전력량은 몇 $\\text{Wh}$인지 구하시오.",
+                answer: "$880\\text{ Wh}$",
+                explanation: "$\\text{전력량} = \\text{전력} \\times \\text{시간} = 440\\text{ W} \\times 2\\text{ h} = 880\\text{ Wh}$"
+              },
+              {
+                id: "s62_sa2",
+                sourceNo: "수준별 1000제 #852",
+                type: "SA",
+                question: "발전 원리를 알아보는 실험에서 코일에 흐르는 전류의 세기를 증가시키는 방법을 세 가지 쓰시오.",
+                answer: "① 더 센 자석을 사용한다. ② 자석을 더 빠르게 움직인다. ③ 단위 길이당 코일의 감은 수를 더 많게 한다.",
+                explanation: "자석의 세기가 셀수록, 자석이 빠르게 움직일수록, 코일의 감은 수가 많을수록 유도 전류의 세기가 세진다."
+              },
+              {
+                id: "s62_sa3",
+                sourceNo: "수준별 1000제 #857",
+                type: "SA",
+                question: "소비 전력이 $60\\text{ W}$인 전구를 $10$분 동안 사용할 때 전구가 소비한 전기 에너지는 몇 $\\text{J}$인지 풀이 과정과 함께 구하시오.",
+                answer: "$36000\\text{ J}$",
+                explanation: "전기 에너지는 '소비 전력($\\text{W}$) × 사용 시간($\\text{s}$)'으로 구할 수 있다. 따라서 소비한 전기 에너지는 $60\\text{ W} \\times 600\\text{ s} = 36000\\text{ J}$이다."
+              },
+              {
+                id: "s62_sa4",
+                sourceNo: "서논술형 평가 #3",
+                type: "SA",
+                question: "제시된 단어 **[열에너지, 운동 에너지, 전환, 전기 에너지]**를 모두 이용하여 선풍기를 오래 사용하면 몸체가 따뜻해지는 까닭을 설명하시오.",
+                answer: "선풍기는 전기 에너지를 주로 운동 에너지로 전환하지만, 선풍기가 작동할 때 전기 에너지의 일부가 열에너지로 전환되기 때문에 몸체가 따뜻해지기도 한다.",
+                explanation: "전기 기구 작동 시 원하는 에너지 형태 외에도 일부가 열에너지로 전환됨을 설명한다."
+              },
+              {
+                id: "s62_sa5",
+                sourceNo: "서논술형 평가 #8",
+                type: "SA",
+                question: "소비 전력이 $40\\text{ W}$인 형광등 $2$개를 하루에 $6$시간씩 사용할 때, $10$일 동안 형광등 $2$개가 소비하는 전기 에너지는 몇 $\\text{Wh}$인지 구하는 과정을 함께 쓰시오.",
+                answer: "$4800\\text{ Wh}$",
+                explanation: "일정한 시간 동안 사용한 전기 에너지의 양은 전력량으로 구할 수 있다. 형광등 $2$개가 $10$일 동안 소비하는 전기 에너지는 $2 \\times 40\\text{ W} \\times 6\\text{ h} \\times 10 = 4800\\text{ Wh}$이다."
+              }
+            ]
+          }
+        ]
+      }
+    ];
+
+    // =========================================================================
+    // 2. APPLICATION STATE
+    // =========================================================================
+    const state = {
+      majorId: null,
+      subId: null,
+      selectedType: "ALL", // ALL | OX | MC | SA
+      userAnswers: {},
+      isGraded: false,
+      currentBatchIds: [],
+      records: []
+    };
+
+    // =========================================================================
+    // 3. UTILITIES & CLOCK
+    // =========================================================================
+    function getFormattedTimestamp(dateObj = new Date()) {
+      const pad = (v) => String(v).padStart(2, '0');
+      return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())} ` +
+             `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}:${pad(dateObj.getSeconds())}`;
+    }
+
+    function startClock() {
+      const update = () => {
+        const el = document.getElementById('live-clock');
+        if (el) el.textContent = getFormattedTimestamp();
+      };
+      update();
+      setInterval(update, 1000);
+    }
+
+    function renderMath(target = document.body) {
+      if (window.renderMathInElement) {
+        renderMathInElement(target, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false }
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    function showToast(msg, icon = "ℹ️") {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-icon').textContent = icon;
+      document.getElementById('toast-msg').textContent = msg;
+      toast.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3200);
+    }
+
+    // =========================================================================
+    // 4. NAVIGATION (대단원 -> 소단원 -> 문항 유형 및 풀기)
+    // =========================================================================
+    function hideAllContentViews() {
+      ['view-major', 'view-sub', 'view-quiz'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+    }
+
+    function navigateTo(level, id = null) {
+      hideAllContentViews();
+      const backBtn = document.getElementById('btn-go-back');
+
+      if (level === 'major') {
+        state.majorId = null;
+        state.subId = null;
+        backBtn.classList.add('hidden');
+        renderMajorView();
+      } else if (level === 'sub') {
+        state.majorId = id || state.majorId;
+        state.subId = null;
+        backBtn.classList.remove('hidden');
+        renderSubView();
+      } else if (level === 'quiz') {
+        state.subId = id || state.subId;
+        state.selectedType = "ALL";
+        state.userAnswers = {};
+        state.isGraded = false;
+        state.currentBatchIds = [];
+        backBtn.classList.remove('hidden');
+        renderQuizView();
+      }
+
+      updateBreadcrumb();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goBack() {
+      if (state.subId) {
+        navigateTo('sub');
+      } else if (state.majorId) {
+        navigateTo('major');
+      }
+    }
+
+    function updateBreadcrumb() {
+      const list = document.getElementById('breadcrumb-list');
+      list.innerHTML = '';
+
+      const addCrumb = (label, onClick, isCurrent = false) => {
+        const li = document.createElement('li');
+        if (isCurrent) {
+          li.className = "font-bold text-teal-700";
+          li.textContent = label;
+        } else {
+          const btn = document.createElement('button');
+          btn.type = "button";
+          btn.className = "hover:text-teal-600 hover:underline transition";
+          btn.textContent = label;
+          btn.onclick = onClick;
+          li.appendChild(btn);
+        }
+        list.appendChild(li);
+      };
+
+      const addSep = () => {
+        const sep = document.createElement('li');
+        sep.className = "text-slate-400 select-none";
+        sep.textContent = ">";
+        list.appendChild(sep);
+      };
+
+      addCrumb("대단원 목록", () => navigateTo('major'), !state.majorId);
+
+      if (state.majorId) {
+        const major = CURRICULUM.find(m => m.id === state.majorId);
+        addSep();
+        addCrumb(major.title, () => navigateTo('sub', major.id), !state.subId);
+
+        if (state.subId) {
+          const sub = major.subUnits.find(s => s.id === state.subId);
+          addSep();
+          addCrumb(sub.title, null, true);
+        }
+      }
+    }
+
+    // =========================================================================
+    // 5. RENDER UNIT VIEWS
+    // =========================================================================
+    function renderMajorView() {
+      const container = document.getElementById('major-list');
+      container.innerHTML = '';
+
+      CURRICULUM.forEach((major, idx) => {
+        const totalQ = major.subUnits.reduce((acc, s) => acc + s.questions.length, 0);
+        const card = document.createElement('button');
+        card.type = "button";
+        card.onclick = () => navigateTo('sub', major.id);
+        card.className = "card-hover text-left w-full bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between gap-4";
+        card.innerHTML = `
+          <div>
+            <span class="inline-block px-2.5 py-1 rounded-md bg-teal-50 text-teal-700 text-xs font-bold mb-2">${major.subtitle}</span>
+            <h3 class="text-2xl font-extrabold text-slate-900">${major.title}</h3>
+            <p class="text-sm text-slate-600 mt-1.5 leading-relaxed">${major.description}</p>
+          </div>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-500">
+            <span>소단원 ${major.subUnits.length}개 · 총 ${totalQ}문항</span>
+            <span class="font-bold text-teal-600">들어가기 →</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('view-major').classList.remove('hidden');
+    }
+
+    function renderSubView() {
+      const major = CURRICULUM.find(m => m.id === state.majorId);
+      document.getElementById('sub-heading').textContent = `${major.title} · 소단원 선택`;
+
+      const container = document.getElementById('sub-list');
+      container.innerHTML = '';
+
+      major.subUnits.forEach((sub, idx) => {
+        const oxCnt = sub.questions.filter(q => q.type === 'OX').length;
+        const mcCnt = sub.questions.filter(q => q.type === 'MC').length;
+        const saCnt = sub.questions.filter(q => q.type === 'SA').length;
+
+        const card = document.createElement('button');
+        card.type = "button";
+        card.onclick = () => navigateTo('quiz', sub.id);
+        card.className = "card-hover text-left bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between gap-4";
+        card.innerHTML = `
+          <div>
+            <span class="inline-block px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold mb-2">소단원 ${idx + 1}</span>
+            <h3 class="text-lg font-extrabold text-slate-900">${sub.title}</h3>
+            <p class="text-sm text-slate-600 mt-1.5 leading-relaxed">${sub.description}</p>
+          </div>
+          <div class="space-y-2.5">
+            <div class="flex flex-wrap gap-1.5 text-xs font-semibold">
+              <span class="px-2.5 py-0.5 rounded bg-sky-50 text-sky-700">OX ${oxCnt}문항</span>
+              <span class="px-2.5 py-0.5 rounded bg-violet-50 text-violet-700">5지선다 ${mcCnt}문항</span>
+              <span class="px-2.5 py-0.5 rounded bg-amber-50 text-amber-700">주관식·서술형 ${saCnt}문항</span>
+            </div>
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-teal-600">
+              <span>문항 유형 선택 및 풀기</span>
+              <span>→</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('view-sub').classList.remove('hidden');
+    }
+
+    // =========================================================================
+    // 6. RENDER QUIZ & QUESTION TYPE FILTERING
+    // =========================================================================
+    function getCurrentUnitObjects() {
+      const major = CURRICULUM.find(m => m.id === state.majorId);
+      const sub = major.subUnits.find(s => s.id === state.subId);
+      return { major, sub };
+    }
+
+    function getFilteredQuestions() {
+      const { sub } = getCurrentUnitObjects();
+      if (state.selectedType === 'ALL') return sub.questions;
+      return sub.questions.filter(q => q.type === state.selectedType);
+    }
+
+    function selectQuestionType(type) {
+      state.selectedType = type;
+      state.userAnswers = {};
+      state.isGraded = false;
+      state.currentBatchIds = [];
+      renderQuizView();
+    }
+
+    function renderQuizView() {
+      const { major, sub } = getCurrentUnitObjects();
+      document.getElementById('quiz-unit-badge').textContent = major.title;
+      document.getElementById('quiz-title').textContent = sub.title;
+      document.getElementById('quiz-desc').textContent = sub.description;
+
+      const types = [
+        { key: "ALL", label: `전체 유형 (${sub.questions.length}문항)` },
+        { key: "OX", label: `OX 퀴즈 (${sub.questions.filter(q => q.type === 'OX').length})` },
+        { key: "MC", label: `5지선다형 (${sub.questions.filter(q => q.type === 'MC').length})` },
+        { key: "SA", label: `주관식·서술형 (${sub.questions.filter(q => q.type === 'SA').length})` }
+      ];
+
+      const typeSelector = document.getElementById('type-selector');
+      typeSelector.innerHTML = '';
+      types.forEach(t => {
+        const active = state.selectedType === t.key;
+        const btn = document.createElement('button');
+        btn.type = "button";
+        btn.onclick = () => selectQuestionType(t.key);
+        btn.className = active
+          ? "px-4 py-2 rounded-xl text-xs font-bold bg-teal-600 text-white shadow-sm transition"
+          : "px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition";
+        btn.textContent = t.label;
+        typeSelector.appendChild(btn);
+      });
+
+      const questions = getFilteredQuestions();
+      const qContainer = document.getElementById('questions-container');
+      qContainer.innerHTML = '';
+
+      questions.forEach((q, idx) => {
+        const typeBadgeMap = {
+          OX: { text: "OX 퀴즈", cls: "bg-sky-50 text-sky-700 border-sky-200" },
+          MC: { text: "5지선다형", cls: "bg-violet-50 text-violet-700 border-violet-200" },
+          SA: { text: "주관식·서술형", cls: "bg-amber-50 text-amber-700 border-amber-200" }
+        };
+        const badge = typeBadgeMap[q.type];
+        const savedVal = state.userAnswers[q.id] || "";
+
+        const card = document.createElement('div');
+        card.id = `card-${q.id}`;
+        card.className = "bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4";
+
+        let inputHtml = '';
+        if (q.type === 'OX') {
+          inputHtml = `
+            <div class="grid grid-cols-2 gap-3 max-w-md pt-1">
+              ${['O', 'X'].map(val => {
+                const isSel = savedVal === val;
+                const activeCls = isSel
+                  ? (val === 'O' ? 'border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200' : 'border-rose-600 bg-rose-50 text-rose-700 ring-2 ring-rose-200')
+                  : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700';
+                return `
+                  <button type="button" ${state.isGraded ? 'disabled' : ''}
+                    onclick="setAnswer('${q.id}', '${val}')"
+                    class="py-3.5 px-4 rounded-xl border-2 font-extrabold text-xl transition ${activeCls}">
+                    ${val === 'O' ? '⭕ O (옳다)' : '❌ X (옳지 않다)'}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          `;
+        } else if (q.type === 'MC') {
+          const circled = ['①', '②', '③', '④', '⑤'];
+          inputHtml = `
+            <div class="space-y-2 pt-1">
+              ${q.options.map((optText, oIdx) => {
+                const choiceNum = String(oIdx + 1);
+                const isSel = savedVal === choiceNum;
+                const activeCls = isSel
+                  ? 'border-teal-600 bg-teal-50 text-teal-900 font-semibold ring-1 ring-teal-300'
+                  : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-800';
+                return `
+                  <button type="button" ${state.isGraded ? 'disabled' : ''}
+                    onclick="setAnswer('${q.id}', '${choiceNum}')"
+                    class="w-full text-left px-4 py-3 rounded-xl border transition flex items-center gap-3 text-sm ${activeCls}">
+                    <span class="font-bold text-teal-600 shrink-0">${circled[oIdx]}</span>
+                    <span>${optText}</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          `;
+        } else if (q.type === 'SA') {
+          inputHtml = `
+            <div class="pt-1">
+              <textarea rows="3" ${state.isGraded ? 'disabled' : ''}
+                oninput="setAnswer('${q.id}', this.value, true)"
+                placeholder="자신의 풀이 과정과 답안을 작성한 뒤, 채점하기 버튼을 눌러 모범답안과 비교해 보세요."
+                class="w-full rounded-xl border border-slate-300 p-3.5 text-sm text-slate-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none">${savedVal}</textarea>
+            </div>
+          `;
+        }
+
+        // Feedback block after grading
+        let feedbackHtml = '';
+        if (state.isGraded) {
+          if (q.type === 'SA') {
+            // 주관식은 채점하지 않고 모범답안과 해설만 제시
+            feedbackHtml = `
+              <div class="mt-4 pt-4 border-t border-amber-200 bg-amber-50/70 rounded-xl p-4 space-y-2 text-sm">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 text-xs font-bold">모범답안 확인 (스스로 점검)</span>
+                </div>
+                <p class="text-slate-900 font-semibold leading-relaxed"><span class="text-amber-800">[모범답안]</span> ${q.answer}</p>
+                <p class="text-slate-700 leading-relaxed"><strong class="text-slate-900">[해설]</strong> ${q.explanation}</p>
+              </div>
+            `;
+          } else {
+            const evalRes = evaluateObjective(q, savedVal);
+            const statusBanner = evalRes.isCorrect
+              ? `<span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">정답 (O)</span>`
+              : `<span class="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-xs font-bold">오답 (X)</span>`;
+
+            feedbackHtml = `
+              <div class="mt-4 pt-4 border-t border-slate-100 bg-slate-50 rounded-xl p-4 space-y-1.5 text-sm">
+                <div class="flex flex-wrap items-center gap-2">
+                  ${statusBanner}
+                  <span class="font-bold text-slate-800">정답: ${formatCorrectAnswer(q)}</span>
+                </div>
+                <p class="text-slate-600 leading-relaxed"><strong class="text-slate-800">[해설]</strong> ${q.explanation}</p>
+              </div>
+            `;
+          }
+        }
+
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-slate-900 text-white text-xs font-bold flex items-center justify-center">
+                ${idx + 1}
+              </span>
+              <span class="px-2.5 py-0.5 rounded-md border text-xs font-bold ${badge.cls}">
+                ${badge.text}
+              </span>
+              <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[11px] font-semibold">
+                ${q.sourceNo}
+              </span>
+            </div>
+          </div>
+          <div class="text-base font-medium text-slate-900 leading-relaxed">
+            ${q.question}
+          </div>
+          ${inputHtml}
+          ${feedbackHtml}
+        `;
+
+        qContainer.appendChild(card);
+      });
+
+      const resultPanel = document.getElementById('result-panel');
+      if (state.isGraded) {
+        resultPanel.classList.remove('hidden');
+      } else {
+        resultPanel.classList.add('hidden');
+        document.getElementById('teacher-question-input').value = '';
+        document.getElementById('question-saved-badge').classList.add('hidden');
+        document.getElementById('question-status-text').textContent = '';
+      }
+
+      document.getElementById('view-quiz').classList.remove('hidden');
+      renderMath(qContainer);
+    }
+
+    function setAnswer(qId, val, silent = false) {
+      state.userAnswers[qId] = val;
+      if (!silent) {
+        renderQuizView();
+      }
+    }
+
+    function resetCurrentQuiz() {
+      state.userAnswers = {};
+      state.isGraded = false;
+      state.currentBatchIds = [];
+      renderQuizView();
+      showToast("답안이 초기화되었습니다.", "🔄");
+    }
+
+    // =========================================================================
+    // 7. GRADING (객관식 자동 채점 / 주관식 모범답안 제시 전용)
+    // =========================================================================
+    function evaluateObjective(q, rawAns) {
+      const ans = String(rawAns || '').trim();
+      const isCorrect = ans === q.answer;
+      return { isCorrect, label: isCorrect ? 'O' : 'X' };
+    }
+
+    function formatCorrectAnswer(q) {
+      if (q.type === 'MC') {
+        const circled = ['①', '②', '③', '④', '⑤'];
+        const idx = Number(q.answer) - 1;
+        return `${circled[idx]} ${q.options[idx]}`;
+      }
+      return q.answer;
+    }
+
+    function stripLatexForExport(text) {
+      return String(text || '')
+        .replace(/<br\s*\/?>/gi, ' / ')
+        .replace(/<[^>]*>/g, '')
+        .replace(/\$\$/g, '')
+        .replace(/\$/g, '')
+        .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1/$2)')
+        .replace(/\\text\{([^}]+)\}/g, '$1')
+        .replace(/\\times/g, '×')
+        .replace(/\\cdot/g, '·')
+        .replace(/\\propto/g, '∝')
+        .replace(/\\;/g, ' ')
+        .replace(/\\\{|\\}/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function gradeQuiz() {
+      const questions = getFilteredQuestions();
+      if (questions.length === 0) return;
+
+      const unanswered = questions.filter(q => !String(state.userAnswers[q.id] || '').trim());
+      if (unanswered.length > 0) {
+        if (!confirm(`아직 작성하지 않은 문항이 ${unanswered.length}개 있습니다. 그대로 채점하고 해설을 볼까요?`)) {
+          return;
+        }
+      }
+
+      const nowStr = getFormattedTimestamp();
+      const { major, sub } = getCurrentUnitObjects();
+      const typeLabelMap = { OX: "OX퀴즈", MC: "5지선다형", SA: "주관식·서술형" };
+
+      let objectiveTotal = 0;
+      let objectiveCorrect = 0;
+      let subjectiveTotal = 0;
+      state.currentBatchIds = [];
+
+      questions.forEach((q, idx) => {
+        const rawAns = String(state.userAnswers[q.id] || '').trim();
+        let resultLabel = "";
+
+        if (q.type === 'SA') {
+          subjectiveTotal++;
+          resultLabel = "모범답안 확인";
+        } else {
+          objectiveTotal++;
+          const evalRes = evaluateObjective(q, rawAns);
+          if (evalRes.isCorrect) objectiveCorrect++;
+          resultLabel = evalRes.label;
+        }
+
+        const displayStudentAns = q.type === 'MC' && rawAns
+          ? `${rawAns}번 (${stripLatexForExport(q.options[Number(rawAns) - 1] || '')})`
+          : (rawAns || '(미작성)');
+
+        const rec = {
+          timestamp: nowStr,
+          majorUnit: major.title,
+          subUnit: sub.title,
+          sourceNo: q.sourceNo,
+          qType: typeLabelMap[q.type],
+          qNum: idx + 1,
+          question: stripLatexForExport(q.question),
+          studentAnswer: displayStudentAns,
+          correctAnswer: stripLatexForExport(formatCorrectAnswer(q)),
+          result: resultLabel,
+          teacherQuestion: ""
+        };
+
+        const insertedIdx = state.records.push(rec) - 1;
+        state.currentBatchIds.push(insertedIdx);
+      });
+
+      state.isGraded = true;
+      updateRecordCountBadge();
+      renderQuizView();
+      playSuccessChime();
+
+      const headline = document.getElementById('result-headline');
+      const subtext = document.getElementById('result-subtext');
+      if (objectiveTotal > 0 && subjectiveTotal > 0) {
+        headline.textContent = `객관식 ${objectiveTotal}문항 중 ${objectiveCorrect}문항 정답! (주관식 ${subjectiveTotal}문항은 모범답안 확인)`;
+        subtext.textContent = `작성 시각(${nowStr}) 기준으로 기록되었습니다. 각 문항 아래의 해설과 모범답안을 꼼꼼히 확인해 보세요.`;
+      } else if (objectiveTotal > 0) {
+        headline.textContent = `객관식 ${objectiveTotal}문항 중 ${objectiveCorrect}문항 정답!`;
+        subtext.textContent = `작성 시각(${nowStr}) 기준으로 기록되었습니다. 틀린 문제는 해설을 보며 다시 점검해 보세요.`;
+      } else {
+        headline.textContent = `주관식·서술형 ${subjectiveTotal}문항 모범답안 및 해설 공개!`;
+        subtext.textContent = `주관식 문항은 자동 채점하지 않습니다. 위 문항별 모범답안·해설과 자신의 풀이를 직접 비교해 보세요.`;
+      }
+
+      document.getElementById('result-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function submitTeacherQuestion() {
+      const qInput = document.getElementById('teacher-question-input');
+      const questionText = qInput.value.trim();
+
+      if (!questionText) {
+        showToast("질문 내용을 입력한 후 저장 버튼을 눌러주세요.", "⚠️");
+        qInput.focus();
+        return;
+      }
+
+      state.currentBatchIds.forEach(idx => {
+        if (state.records[idx]) {
+          state.records[idx].teacherQuestion = questionText;
+        }
+      });
+
+      document.getElementById('question-saved-badge').classList.remove('hidden');
+      document.getElementById('question-status-text').textContent = `저장 시각: ${getFormattedTimestamp()} · 엑셀 내보내기 시 함께 포함됩니다.`;
+      playNotifySound();
+      showToast("질문이 저장되었습니다! 엑셀 내보내기에 반영됩니다.", "✉️");
+    }
+
+    function updateRecordCountBadge() {
+      document.getElementById('record-count-badge').textContent = String(state.records.length);
+    }
+
+    // =========================================================================
+    // 8. EXCEL (.XLSX) EXPORT (개인정보 항목 제외)
+    // =========================================================================
+    function exportToExcel() {
+      if (state.records.length === 0) {
+        showToast("아직 채점 완료된 기록이 없습니다. 먼저 문제를 풀고 채점하기를 눌러주세요.", "⚠️");
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+
+      const rows1 = state.records.map(r => ({
+        "작성시각(PC시간)": r.timestamp,
+        "대단원": r.majorUnit,
+        "소단원": r.subUnit,
+        "출처번호": r.sourceNo,
+        "문항유형": r.qType,
+        "학생작성답안": r.studentAnswer,
+        "정답/모범답안": r.correctAnswer,
+        "채점결과": r.result,
+        "문제내용": r.question,
+        "질문 메모": r.teacherQuestion || ""
+      }));
+
+      const ws1 = XLSX.utils.json_to_sheet(rows1);
+      ws1['!cols'] = [
+        { wch: 20 }, { wch: 20 }, { wch: 26 }, { wch: 22 }, { wch: 14 },
+        { wch: 28 }, { wch: 32 }, { wch: 14 }, { wch: 48 }, { wch: 36 }
+      ];
+      XLSX.utils.book_append_sheet(wb, ws1, "과학형성평가결과");
+
+      const questionMap = new Map();
+      state.records.forEach(r => {
+        if (r.teacherQuestion && r.teacherQuestion.trim() !== "") {
+          const key = `${r.timestamp}_${r.subUnit}_${r.teacherQuestion}`;
+          if (!questionMap.has(key)) {
+            questionMap.set(key, {
+              "작성시각(PC시간)": r.timestamp,
+              "단원": `${r.majorUnit} > ${r.subUnit}`,
+              "질문 내용": r.teacherQuestion
+            });
+          }
+        }
+      });
+
+      const rows2 = questionMap.size > 0
+        ? Array.from(questionMap.values())
+        : [{ "안내": "작성된 질문이 없습니다." }];
+      const ws2 = XLSX.utils.json_to_sheet(rows2);
+      ws2['!cols'] = [{ wch: 20 }, { wch: 40 }, { wch: 55 }];
+      XLSX.utils.book_append_sheet(wb, ws2, "질문 모음");
+
+      const dateTag = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const filename = `중3과학_형성평가결과_${dateTag}.xlsx`;
+
+      XLSX.writeFile(wb, filename);
+      playNotifySound();
+      showToast(`엑셀 파일(${filename})이 다운로드되었습니다!`, "📥");
+    }
+
+    // Boot directly into Major Unit view (No login screen)
+    navigateTo('major');
+    startClock();
+  </script>
+</body>
+</html>
